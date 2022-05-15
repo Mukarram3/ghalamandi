@@ -1,0 +1,63 @@
+@font-face {
+    font-family: 'Jameel Noori Nastaleeq Kasheeda';
+    src: url('../fonts/Jameel Noori Nastaleeq Kasheeda.ttf') format('truetype');
+}
+body{
+    font-family: Jameel Noori Nastaleeq Kasheeda;
+    overflow-x: hidden;
+}
+.main_p{
+    font-size: 90px;
+    font-weight: bold;
+}
+.head{
+    border-bottom: 5px solid black !important;
+}
+.logo{
+    width: 180px;
+    height: auto;
+    display: inline-block;
+}
+.contact{
+    text-align: center;
+    margin-top: 30px;
+    font-weight: bolder;
+    font-size: 45px;
+}
+.name{
+    margin-bottom: -20px;
+}
+.table1 , .tr , .td , .th{
+    border: 2px solid black !important;
+    text-align: center;
+}
+.tr .th{
+    font-size: 23px;
+}
+.tr .td{
+    font-size: 22px;
+}
+.waight {
+    font-size: 22px;
+    font-weight: bolder;
+    margin: 30px;
+}
+.waight::before {
+    content: "";
+    width: 150px;
+    height: 2px;
+    background-color: black;
+    border: 2px solid black;
+    display: inline-block;
+    margin-right: 20px;
+}
+.note{
+    font-size: 22px;
+    text-align: center;
+    display: inline-block;
+
+}
+.address{
+    font-size: 24px;
+    font-weight: bold;
+}

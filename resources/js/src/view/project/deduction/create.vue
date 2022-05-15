@@ -1,0 +1,126 @@
+<template>
+    <div>
+        <div class="row">
+            <div class="col-md-12">
+                <KTCard ref="preview" v-if="true" v-bind:title="title">
+                    <template v-slot:title>
+
+                    </template>
+                    <template v-slot:toolbar>
+                        <div class="example-tools justify-content-center">
+                            <router-link to="/deduction/index" class="btn btn-dark btn-sm">Back</router-link>
+                        </div>
+                    </template>
+                    <template v-slot:body>
+                        <div>
+                            <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+
+                                <b-form-group id="input-group1" label="Name :" label-for="input1">
+                                    <b-form-input
+                                        id="field_names"
+                                        v-model="form.name"
+                                        placeholder="Deduction Name"
+                                    >
+                                    </b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.name" :errors="errors">
+                                        <span v-for=" error in errors.name ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group id="input-group4" label="Description:" label-for="input4">
+                                    <b-form-input
+                                        id="field_prices"
+                                        v-model="form.desc"
+                                        placeholder="Description"
+                                    ></b-form-input>
+                                </b-form-group>
+
+
+                                <b-button type="submit" v-html="submit_text" variant="primary">{{
+                                        submit_text
+                                    }}
+                                </b-button>
+                                <b-button type="reset" variant="danger">Reset</b-button>
+                            </b-form>
+
+                        </div>
+
+                    </template>
+                </KTCard>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+import 'vuetify/dist/vuetify.min.css'
+import KTCard from "@/view/content/Card.vue";
+import ApiService from "@/core/services/api.service";
+import {SET_BREADCRUMB} from "@/core/services/store/breadcrumbs.module";
+import Swal from "sweetalert2";
+import User from "../../../core/services/User";
+
+export default {
+    components: {KTCard},
+    data() {
+        return {
+            title: 'Create Deduction',
+            titleRight: 'List Deductions',
+            is_update: false,
+            submit_text: 'Submit',
+            form: {
+                name: '',
+                desc: '',
+            },
+            items: [],
+            checkbox: false,
+            show: true,
+            search: '',
+            desserts: [],
+            errors: {},
+        }
+    },
+    mounted() {
+        this.form.user_id = User.id();
+        this.$store.dispatch(SET_BREADCRUMB, [{title: "Deduction"}]);
+    },
+    methods: {
+        onSubmit(evt) {
+            evt.preventDefault()
+            // console.log(JSON.stringify(this.form))
+            this.errors = {};
+            this.submit_text = '<span aria-hidden="true" class="spinner-grow spinner-grow-sm"></span>Loading...';
+            ApiService.post('/api/deduction/create', this.form).then((res) => {
+                this.$bvToast.toast(res.data.message, {
+                    title: `Deduction Created Successfully...`,
+
+                    solid: true
+                })
+                this.redirectToIndex();
+            }).catch((error) => {
+                this.submit_text = 'Submit';
+                if (error.response.status === 422) {
+                    console.log(error.response.data.errors);
+                    this.errors = error.response.data.errors || {};
+                }
+            })
+        },
+        redirectToIndex() {
+            this.$router.push({name: 'index_deduction'});
+        },
+        onReset(evt) {
+            evt.preventDefault()
+            // Reset our form values
+            this.form.desc = ''
+            this.form.head_id = ''
+            this.form.amount = ''
+            this.show = false
+            this.submit_text = 'Submit';
+            this.$nextTick(() => {
+                this.show = true
+            })
+        },
+    },
+}
+</script>

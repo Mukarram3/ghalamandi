@@ -1,0 +1,198 @@
+<template>
+    <div>
+        <div class="row">
+            <div class="col-md-12">
+                <KTCard ref="preview" v-if="true" v-bind:title="title">
+                    <template v-slot:title>
+
+                    </template>
+                    <template v-slot:toolbar>
+                        <div class="example-tools justify-content-center">
+                            <router-link to="/deduction-item/index" class="btn btn-dark btn-sm">Back</router-link>
+                        </div>
+                    </template>
+                    <template v-slot:body>
+                        <div>
+                            <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+                                <b-form-group id="input-group3" label="Account :" label-for="input3">
+                                    <select
+                                        class="form-control"
+                                        v-model="form.deduction_id">
+                                        <option value="" disabled hidden>Choose Deduction Account</option>
+                                        <option v-for="item in deductions" :value="item.id">{{ item.name }}
+                                        </option>
+                                    </select>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.deduction_id" :errors="errors">
+                                        <span v-for=" error in errors.deduction_id ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group id="input-group1" label="Name :" label-for="input1">
+                                    <b-form-input
+                                        v-model="form.name"
+                                        placeholder="Name"
+                                    >
+                                    </b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.name" :errors="errors">
+                                        <span v-for=" error in errors.name ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group id="input-group2" label="Type :" label-for="input2">
+                                    <select
+                                        class="form-control"
+                                        v-model="form.type"
+                                        @change="changeType"
+                                    >
+                                        <option value="" disabled hidden>Choose Type</option>
+                                        <option v-for="type in types">{{ type }}
+                                        </option>
+                                    </select>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.type" :errors="errors">
+                                        <span v-for=" error in errors.type ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group v-if="def_value" id="input-group4" label="Default Value:" label-for="input4">
+                                    <b-form-input
+                                        v-model="form.def_value"
+                                        placeholder="Default Value"
+                                    ></b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.def_value" :errors="errors">
+                                        <span v-for=" error in errors.def_value ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group v-if="deduction_kgs" id="input-group4" label="Deduction (kgs):" label-for="input4">
+                                    <b-form-input
+                                        v-model="form.deduction_kgs"
+                                        placeholder="Deduction (kgs)"
+                                    ></b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.deduction_kgs" :errors="errors">
+                                        <span v-for=" error in errors.deduction_kgs ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group id="input-group-2" label="Status" label-for="input-2">
+                                    <select class="form-control" v-model="form.status">
+                                        <option value="" disabled hidden>Choose Status</option>
+                                        <option v-for="option in statusOptions">{{ option }}</option>
+                                    </select>
+                                </b-form-group>
+
+
+                                <b-button type="submit" v-html="submit_text" variant="primary">{{
+                                        submit_text
+                                    }}
+                                </b-button>
+                                <b-button type="reset" variant="danger">Reset</b-button>
+                            </b-form>
+
+                        </div>
+
+                    </template>
+                </KTCard>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+import 'vuetify/dist/vuetify.min.css'
+import KTCard from "@/view/content/Card.vue";
+import ApiService from "@/core/services/api.service";
+import {SET_BREADCRUMB} from "@/core/services/store/breadcrumbs.module";
+import Swal from "sweetalert2";
+import User from "../../../core/services/User";
+
+export default {
+    components: {KTCard},
+    data() {
+        return {
+            title: 'Create Deduction',
+            titleRight: 'List Deductions',
+            is_update: false,
+            submit_text: 'Submit',
+            form: {
+                name: '',
+                type: '',
+                def_value: '',
+                deduction_id: '',
+                deduction_kgs: '',
+                status: '',
+            },
+            types: ['fixed', 'percent', 'weight'],
+            deductions: [],
+            checkbox: false,
+            show: true,
+            deduction_kgs: false,
+            def_value: true,
+            search: '',
+            desserts: [],
+            statusOptions: ['active', 'inactive'],
+            errors: {},
+        }
+    },
+    mounted() {
+        this.$store.dispatch(SET_BREADCRUMB, [{title: "Dashboard"}]);
+    },
+    methods: {
+        onSubmit(evt) {
+            evt.preventDefault()
+            // console.log(JSON.stringify(this.form))
+            this.errors = {};
+            this.submit_text = '<span aria-hidden="true" class="spinner-grow spinner-grow-sm"></span>Loading...';
+            ApiService.post('/api/deduction-item/create', this.form).then((res) => {
+                this.$bvToast.toast(res.data.message, {
+                    title: `Deduction Item Created Successfully...`,
+
+                    solid: true
+                })
+                this.redirectToIndex();
+            }).catch((error) => {
+                this.submit_text = 'Submit';
+                if (error.response.status === 422) {
+                    console.log(error.response.data.errors);
+                    this.errors = error.response.data.errors || {};
+                }
+            })
+        },
+        changeType(event){
+            console.log(event.target.value);
+            if (event.target.value == 'weight') {
+                this.def_value = false;
+                this.deduction_kgs = true;
+            } else {
+                this.deduction_kgs = false;
+                this.def_value = true;
+            }
+        },
+        redirectToIndex() {
+            this.$router.push({name: 'index_deduction_item'});
+        },
+        onReset(evt) {
+            evt.preventDefault()
+            // Reset our form values
+            this.form.name = ''
+            this.form.type = ''
+            this.form.def_value = ''
+            this.form.deduction_kgs = ''
+            this.show = false
+            this.submit_text = 'Submit';
+            this.$nextTick(() => {
+                this.show = true
+            })
+        },
+        getDeductionDataFromApi() {
+            ApiService.get('/api/deduction-item/fetch-deductions').then((res) => {
+                this.deductions = res.data;
+                console.log('Fetch Data: ', res.data);
+            });
+        },
+    },
+    created() {
+        this.getDeductionDataFromApi();
+    }
+}
+</script>

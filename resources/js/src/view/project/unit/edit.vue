@@ -1,0 +1,158 @@
+<template>
+    <div>
+        <div class="row">
+            <div class="col-md-12">
+                <KTCard ref="preview" v-if="true" v-bind:title="title" >
+                    <template v-slot:title>
+
+                    </template>
+                    <template v-slot:toolbar>
+                        <div class="example-tools justify-content-center">
+                            <router-link to="/unit/index" class="btn btn-dark btn-sm">Back</router-link>
+                        </div>
+                    </template>
+                    <template v-slot:body>
+                        <div>
+                            <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+                                <b-form-group
+                                    id="input-group-1"
+                                    label="Unit Name :*"
+                                    label-for="input-1"
+                                    description=""
+                                >
+                                    <b-form-input
+                                        v-model="form.name"
+                                        type="text"
+
+                                        placeholder="Enter Unit Name..."
+                                    ></b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.name" :errors="errors">
+                                        <span v-for=" error in errors.name ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+                                <b-form-group id="input-group-2" label="Weight in Kgs" label-for="input-2">
+                                    <b-form-input
+                                        id="input-2"
+                                        v-model="form.kgs"
+
+                                        placeholder="Weight In Kgs"
+                                    ></b-form-input>
+                                    <b-form-invalid-feedback style="display: block;" v-if="errors.kgs" :errors="errors">
+                                        <span v-for=" error in errors.kgs ">{{ error }}</span><br>
+                                    </b-form-invalid-feedback>
+                                </b-form-group>
+
+
+                                <b-form-group  id="checkbox-11" label-for="checkbox-1">
+                                    <b-form-checkbox
+                                        id="checkbox-1"
+                                        v-model="form.default"
+                                        name="checkbox-1"
+                                        value="yes"
+                                        unchecked-value="no"
+
+                                    >
+                                        Is Default
+                                    </b-form-checkbox>
+                                </b-form-group>
+
+                                <b-button variant="primary" v-html="submit_text" type="submit">
+
+                                </b-button>
+                                <b-button type="reset" variant="danger">Reset</b-button>
+                            </b-form>
+
+                        </div>
+
+                    </template>
+                </KTCard>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+    import 'vuetify/dist/vuetify.min.css'
+    import KTCard from "@/view/content/Card.vue";
+    import ApiService from "@/core/services/api.service";
+    import { SET_BREADCRUMB } from "@/core/services/store/breadcrumbs.module";
+    import Swal from "sweetalert2";
+
+    export default {
+        components:{KTCard},
+        data(){
+            return{
+                title:'Update Unit',
+                titleRight:'List Units',
+                is_update:false,
+                submit_text:'Update',
+                form: {
+                    kgs: '',
+                    default: '',
+                    name: '',
+                },
+                errors: {},
+                show: true,
+                search: '',
+                itemindex:0,
+            }
+        },
+        mounted() {
+            this.$store.dispatch(SET_BREADCRUMB, [{ title: "Manage Units" }]);
+        },
+        methods: {
+            onSubmit(evt) {
+                evt.preventDefault()
+                // alert(JSON.stringify(this.form))
+                this.errors = {};
+                this.submit_text='<span aria-hidden="true" class="spinner-grow spinner-grow-sm"></span>Loading...';
+                    ApiService.post('/api/unit/update',this.form).then((res)=>{
+                        console.log(res)
+                        this.$bvToast.toast(res.data.message, {
+                            title: `Unit updated Successfully...`,
+                            solid: true
+                        })
+
+                        this.redirectToIndex();
+                    }).catch((error)=>{
+                        this.submit_text='Update';
+                        if (error.response.status === 422) {
+                            this.$bvToast.toast('Error', {
+                                title: `Something went wrong...`,
+                                solid: true
+                            })
+                            console.log(error.response.data.errors);
+                            this.errors = error.response.data.errors || {};
+                        }
+                    })
+            },
+            redirectToIndex() {
+                this.$router.push({name: 'index_unit'});
+            },
+            onReset(evt) {
+                evt.preventDefault()
+                // Reset our form values
+                this.form.kgs = ''
+                this.form.name = ''
+                this.show = false
+                this.$nextTick(() => {
+                    this.show = true
+                })
+            },
+            getEditDataFromApi: function () {
+                ApiService.get('/api/unit/edit', this.$route.params.id).then((res) => {
+                    this.form = res.data;
+                    // console.log(res.data);
+                    if(res.data.is_default=='yes') {
+                        this.form.default = 'yes';
+                    }
+                });
+            },
+        },
+        created() {
+            this.getEditDataFromApi();
+        }
+    }
+</script>
